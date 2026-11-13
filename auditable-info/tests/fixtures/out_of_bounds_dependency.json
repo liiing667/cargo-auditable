@@ -1,0 +1,11 @@
+{
+    "packages": [
+        {
+            "name": "malformed",
+            "version": "1.0.0",
+            "source": "local",
+            "dependencies": [5],
+            "root": true
+        }
+    ]
+}

@@ -1,0 +1,16 @@
+{
+    "packages": [
+        {
+            "name": "root-crate",
+            "version": "1.0.0",
+            "source": "local",
+            "dependencies": [1, 1],
+            "root": true
+        },
+        {
+            "name": "libc",
+            "version": "0.2.0",
+            "source": "crates.io"
+        }
+    ]
+}

@@ -1,0 +1,15 @@
+{
+    "packages": [
+        {
+            "name": "orphan",
+            "version": "1.0.0",
+            "source": "local",
+            "dependencies": [1]
+        },
+        {
+            "name": "libc",
+            "version": "0.2.0",
+            "source": "crates.io"
+        }
+    ]
+}

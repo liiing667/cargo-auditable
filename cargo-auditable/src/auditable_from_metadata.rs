@@ -217,6 +217,9 @@ pub fn encode_audit_data(
             }
             // .sort_unstable() is fine because they're all integers
             package.dependencies.sort_unstable();
+            // The resolved graph can list the same dependency more than once,
+            // and a duplicate edge is considered invalid by the SBOM parser.
+            package.dependencies.dedup();
         }
     }
     Ok(VersionInfo {

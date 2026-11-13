@@ -8,7 +8,73 @@ use validation::RawVersionInfo;
 
 use serde::{Deserialize, Serialize};
 
+use std::convert::TryFrom;
 use std::str::FromStr;
+
+pub use validation::ValidationError;
+
+/// An error returned by [`VersionInfo::parse`].
+///
+/// Distinguishes malformed JSON (and other deserialization errors)
+/// from structurally invalid but well-formed dependency trees.
+#[derive(Debug)]
+pub enum ParseError {
+    /// The input is not valid JSON or does not match the expected schema.
+    Json(serde_json::Error),
+    /// The input deserialized successfully, but its dependency tree is structurally invalid.
+    Validation(ValidationError),
+}
+
+impl std::error::Error for ParseError {
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        match self {
+            ParseError::Json(error) => Some(error),
+            ParseError::Validation(error) => Some(error),
+        }
+    }
+}
+
+impl std::fmt::Display for ParseError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            ParseError::Json(error) => {
+                write!(f, "Failed to deserialize audit data from JSON: {error}")
+            }
+            ParseError::Validation(error) => {
+                write!(
+                    f,
+                    "The audit data describes an invalid dependency tree: {error}"
+                )
+            }
+        }
+    }
+}
+
+impl From<serde_json::Error> for ParseError {
+    fn from(error: serde_json::Error) -> Self {
+        ParseError::Json(error)
+    }
+}
+
+impl From<ValidationError> for ParseError {
+    fn from(error: ValidationError) -> Self {
+        ParseError::Validation(error)
+    }
+}
+
+impl VersionInfo {
+    /// Parses the audit data from a JSON string and validates its dependency tree.
+    ///
+    /// Unlike [`VersionInfo::from_str`], this function distinguishes JSON deserialization
+    /// errors (see [`ParseError::Json`]) from structural validation errors
+    /// such as out-of-bounds dependency indices, duplicate edges or a missing root
+    /// (see [`ParseError::Validation`]).
+    pub fn parse(json: &str) -> Result<VersionInfo, ParseError> {
+        let raw: RawVersionInfo = serde_json::from_str(json)?;
+        let version_info = VersionInfo::try_from(raw)?;
+        Ok(version_info)
+    }
+}
 
 /// Dependency tree embedded in the binary.
 ///
@@ -23,14 +89,16 @@ use std::str::FromStr;
 /// let json_str = r#"{"packages":[{
 ///     "name":"adler",
 ///     "version":"0.2.3",
-///     "source":"registry"
+///     "source":"registry",
+///     "root":true
 /// }]}"#;
 /// let info = VersionInfo::from_str(json_str).unwrap();
 /// assert_eq!(&info.packages[0].name, "adler");
 /// ```
 ///
-/// If deserialization succeeds, it is guaranteed that there is only one root package,
-/// and that are no cyclic dependencies.
+/// If deserialization succeeds, it is guaranteed that there is exactly one root package,
+/// that every dependency index points to an existing package,
+/// that there are no duplicate dependency edges and that there are no cyclic dependencies.
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, PartialOrd, Ord, Clone)]
 #[serde(try_from = "RawVersionInfo")]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]

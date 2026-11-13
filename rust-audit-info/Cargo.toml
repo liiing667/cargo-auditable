@@ -12,6 +12,7 @@ edition = "2018"
 
 [dependencies]
 auditable-info = {version = "0.10.0", default-features = false, path = "../auditable-info"}
+auditable-serde = {version = "0.9.0", path = "../auditable-serde"}
 
 [features]
 wasm = ["auditable-info/wasm"]

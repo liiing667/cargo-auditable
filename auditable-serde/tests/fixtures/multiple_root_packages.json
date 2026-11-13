@@ -1,0 +1,16 @@
+{
+    "packages": [
+        {
+            "name": "first-root",
+            "version": "1.0.0",
+            "source": "local",
+            "root": true
+        },
+        {
+            "name": "second-root",
+            "version": "1.0.0",
+            "source": "local",
+            "root": true
+        }
+    ]
+}

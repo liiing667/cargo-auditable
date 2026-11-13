@@ -46,10 +46,16 @@ The JSON schema is available [here](cargo-auditable.schema.json).
 If your use case calls not just for obtaining the versions of the crates used in the build, but also for reconstructing the dependency tree, you need to validate the data first. The format technically allows encoding the following invalid states:
 
 1. Zero root packages
-1. More than one root package 
+1. More than one root package
+1. A dependency index that points outside the package array
+1. The same dependency edge listed more than once for a package
 1. Cyclic dependencies
 
-Before you walk the dependency tree, make sure that the dependency graph does not contain cycles - for example, by performing [topological sorting](https://en.wikipedia.org/wiki/Topological_sorting) - and that there is only one package with `root: true`.
+Before you walk the dependency tree, validate that there is exactly one package with `root: true`,
+that every dependency index points to an existing package, that there are no duplicate edges
+and that the dependency graph does not contain cycles - for example, by performing
+[topological sorting](https://en.wikipedia.org/wiki/Topological_sorting).
+If any of these checks fails, reject the data instead of treating it as a trusted SBOM.
 
 (We have experimented with formats that do not allow encoding cyclic dependencies, but they turned out no easier to work with - the same issues occur and have to be dealt with, just in different places. They were also less amenable to compression.)
 

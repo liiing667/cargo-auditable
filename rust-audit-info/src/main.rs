@@ -1,6 +1,7 @@
 #![forbid(unsafe_code)]
 
 use auditable_info::{json_from_file, Limits};
+use auditable_serde::VersionInfo;
 use std::env::args_os;
 use std::error::Error;
 use std::io::Write;
@@ -25,6 +26,9 @@ fn main() {
 fn actual_main() -> Result<(), Box<dyn Error>> {
     let (input, limits) = parse_args()?;
     let decompressed_data: String = json_from_file(&input, limits)?;
+    // Fail closed: do not print anything unless the embedded dependency tree
+    // is structurally valid and can be trusted as an SBOM.
+    VersionInfo::parse(&decompressed_data)?;
 
     let stdout = std::io::stdout();
     let mut stdout = stdout.lock();

@@ -1,0 +1,16 @@
+{
+    "packages": [
+        {
+            "name": "legacy-root",
+            "version": "0.1.0",
+            "source": "local",
+            "dependencies": [1],
+            "root": true
+        },
+        {
+            "name": "adler",
+            "version": "0.2.3",
+            "source": "registry"
+        }
+    ]
+}

@@ -39,10 +39,11 @@ pub use crate::error::*;
 /// let info = audit_info_from_file(&PathBuf::from("path/to/file"), Default::default())?;
 /// ```
 ///
-/// The data is validated to only have a single root package and not contain any circular dependencies.
+/// The data is validated to contain exactly one root package, valid dependency indices,
+/// no duplicate edges and no circular dependencies.
 #[cfg(feature = "serde")]
 pub fn audit_info_from_file(path: &Path, limits: Limits) -> Result<VersionInfo, Error> {
-    Ok(serde_json::from_str(&json_from_file(path, limits)?)?)
+    audit_info_from_json(&json_from_file(path, limits)?)
 }
 
 /// Extracts the audit data from the specified binary and returns the JSON string.
@@ -65,13 +66,30 @@ pub fn json_from_file(path: &Path, limits: Limits) -> Result<String, Error> {
 /// let info = audit_info_from_reader(&mut handle, Default::default())?;
 /// ```
 ///
-/// The data is validated to only have a single root package and not contain any circular dependencies.
+/// The data is validated to contain exactly one root package, valid dependency indices,
+/// no duplicate edges and no circular dependencies.
 #[cfg(feature = "serde")]
 pub fn audit_info_from_reader<T: BufRead>(
     reader: &mut T,
     limits: Limits,
 ) -> Result<VersionInfo, Error> {
-    Ok(serde_json::from_str(&json_from_reader(reader, limits)?)?)
+    audit_info_from_json(&json_from_reader(reader, limits)?)
+}
+
+/// Deserializes audit data already extracted and decompressed from a binary.
+///
+/// Fails closed when the dependency tree is structurally invalid,
+/// e.g. it has no root, references non-existent packages,
+/// contains duplicate edges or describes a cyclic graph.
+///
+/// JSON syntax errors are reported as [`Error::Json`],
+/// structural validation errors as [`Error::AuditDataValidation`].
+#[cfg(feature = "serde")]
+pub fn audit_info_from_json(json: &str) -> Result<VersionInfo, Error> {
+    VersionInfo::parse(json).map_err(|parse_error| match parse_error {
+        auditable_serde::ParseError::Json(error) => Error::Json(error),
+        auditable_serde::ParseError::Validation(error) => Error::AuditDataValidation(error),
+    })
 }
 
 /// Extracts the audit data and returns the JSON string.
@@ -122,10 +140,10 @@ pub fn audit_info_from_slice(
     input_binary: &[u8],
     decompressed_json_size_limit: usize,
 ) -> Result<VersionInfo, Error> {
-    Ok(serde_json::from_str(&json_from_slice(
+    audit_info_from_json(&json_from_slice(
         input_binary,
         decompressed_json_size_limit,
-    )?)?)
+    )?)
 }
 
 /// The input slice should contain the entire binary.

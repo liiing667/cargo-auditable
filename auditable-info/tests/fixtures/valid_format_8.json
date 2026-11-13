@@ -1,0 +1,19 @@
+{
+    "format": 8,
+    "packages": [
+        {
+            "name": "sbom-root",
+            "version": "2.3.4",
+            "source": "local",
+            "kind": "runtime",
+            "dependencies": [1],
+            "root": true
+        },
+        {
+            "name": "serde",
+            "version": "1.0.210",
+            "source": "crates.io",
+            "kind": "build"
+        }
+    ]
+}

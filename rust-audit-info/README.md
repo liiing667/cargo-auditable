@@ -14,6 +14,7 @@ This tool is intentionally minimal and does not implement vulnerability scanning
  - 100% memory-safe Rust, including all dependencies. No memory-unsafe code anywhere in the dependency tree.
  - Cross-platform, portable, easy to cross-compile. Runs on [any Rust target with `std`](https://doc.rust-lang.org/stable/rustc/platform-support.html).
  - Supports setting size limits for both input and output, to protect against [OOMs](https://en.wikipedia.org/wiki/Out_of_memory) and [zip bombs](https://en.wikipedia.org/wiki/Zip_bomb).
+ - Validates the dependency tree and exits with a non-zero status without printing anything if the audit data is malformed, references non-existent packages, contains duplicate edges or lacks a single root package.
 
 ### Usage
 
